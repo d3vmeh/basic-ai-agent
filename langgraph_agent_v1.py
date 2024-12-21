@@ -11,6 +11,7 @@ from langchain_core.agents import AgentFinish
 from langgraph.prebuilt.tool_executor import ToolExecutor
 from langgraph.graph import END, StateGraph
 import operator
+from datetime import datetime
 
 
 
@@ -44,9 +45,18 @@ def random_number(text: str) -> str:
     """Return a random number between 0 and 100"""
     return str(random.randint(0, 100))
 
+@tool("get_todays_date",return_direct=True)
+def get_todays_date(text: str) -> str:
+    """Return the current date in the format of YYYY-MM-DD"""
+    return str(datetime.now().strftime("%Y-%m-%d"))
+
+@tool("get_web_info",return_direct=True)
+def get_web_info(text: str) -> str:
+    """Return information from the web"""
+    return "Web information"
 
 #Setting tools for agent to use
-tools = [lower_case, random_number]
+tools = [lower_case, random_number, get_todays_date, get_web_info]
 
 #print(random_number.run('random'))
 
@@ -122,6 +132,16 @@ output = app.invoke(inputs)
 output.get("agent_outcome").return_values["output"]
 print(output.get("intermediate_steps"))
 
+print("\n\nTesting without tools")
+inputs = {"input": "What month is Christmas in?","chat_history": []}
+output = app.invoke(inputs)
+print(output.get("agent_outcome").return_values["output"])
+print(output.get("intermediate_steps"))
 
 
+print("Getting todays date")
+inputs = {"input": "What is the date today?","chat_history": []}
+output = app.invoke(inputs)
+print(output.get("agent_outcome").return_values["output"])
+print(output.get("intermediate_steps"))
 
