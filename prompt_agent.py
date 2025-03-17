@@ -78,7 +78,7 @@ def get_llm_response(question, context):
 
             Inputs:
             - destination (str): IATA code of destination airport (e.g., 'NYC' for New York)
-            - departure_date (str): Date in format mm/dd/yy
+            - departure_date (str): Date in format mm/dd/yy.
             - origin (str): IATA code of origin airport (default: 'LON' for London)
 
             Returns:
@@ -86,6 +86,7 @@ def get_llm_response(question, context):
 
             
             Return format: Optional[List[Dict]]: List of available flights with their details, or None if no flights are found
+
 
 
             ========================
@@ -98,7 +99,7 @@ def get_llm_response(question, context):
             If you already have the information you need from the tool ouputs, ignore the rest of the instructions and answer the question immediately in the following format:
 
             
-            {"response": "Answer to the question in natural language using the information you have"}
+            {"response": "Answer to the question in natural language using the information you have. Be detailed and thorough."}
             
             
             Recall, you response is for this question: """ + question + """
@@ -155,6 +156,10 @@ while True:
             departure_date = response['tools']['check_flights']['departure_date']
             origin = response['tools']['check_flights']['origin']
             value = check_flights(destination, departure_date, origin)
+            tool_outputs.append(value)
+            tools_used.append(tool)
+        elif tool == 'get_todays_date':
+            value = get_todays_date()
             tool_outputs.append(value)
             tools_used.append(tool)
         else:

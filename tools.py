@@ -44,7 +44,7 @@ def get_current_weather(location: str) -> Optional[Dict[str, str]]:
         
         if response.status_code == 200:
             weather_data = {
-                'temperature': f"{weather_info['main']['temp']}°C",
+                'temperature': f"{weather_info['main']['temp']}°F",
                 'description': weather_info['weather'][0]['description'],
                 'humidity': f"{weather_info['main']['humidity']}%",
                 'wind_speed': f"{weather_info['wind']['speed']} m/s"
@@ -69,6 +69,39 @@ def check_flights(destination: str, departure_date: str, origin: str = "LON") ->
     Returns:
         Optional[List[Dict]]: List of available flights with their details, or None if no flights are found
     """
+
+    airline_names = {
+        'BA': 'British Airways',
+        'AF': 'Air France',
+        'LH': 'Lufthansa',
+        'AA': 'American Airlines',
+        'UA': 'United Airlines',
+        'DL': 'Delta Air Lines',
+        'EK': 'Emirates',
+        'IB': 'Iberia',
+        'KL': 'KLM Royal Dutch Airlines',
+        'QF': 'Qantas',
+        'F9': 'Frontier Airlines',
+        'W2': 'FlexFlight',
+        'WN': 'Southwest Airlines',
+        'B6': 'JetBlue Airways',
+        'AS': 'Alaska Airlines',
+        'NK': 'Spirit Airlines',
+        'WS': 'WestJet',
+        'AC': 'Air Canada',
+        'VS': 'Virgin Atlantic',
+        'TK': 'Turkish Airlines',
+        'LX': 'Swiss International Air Lines',
+        'OS': 'Austrian Airlines',
+        'AY': 'Finnair',
+        'SK': 'SAS Scandinavian Airlines',
+        'EI': 'Aer Lingus',
+        'TP': 'TAP Air Portugal',
+        'LO': 'LOT Polish Airlines',
+        'AZ': 'ITA Airways',
+        'SN': 'Brussels Airlines'
+    }
+
     try:
         formatted_date = datetime.strptime(departure_date, '%m/%d/%y').strftime('%Y-%m-%d')
         
@@ -77,21 +110,29 @@ def check_flights(destination: str, departure_date: str, origin: str = "LON") ->
             destinationLocationCode=destination,
             departureDate=formatted_date,
             adults=1,
-            max=5
+            max=5, 
+            currencyCode='USD'
         )
         
         if response.data:
             flights = []
             for offer in response.data:
+                airline_code = offer['validatingAirlineCodes'][0]
+                airline_name = airline_names.get(airline_code, airline_code)
+                
+                departure_time = datetime.fromisoformat(offer['itineraries'][0]['segments'][0]['departure']['at'].replace('Z', '+00:00'))
+                arrival_time = datetime.fromisoformat(offer['itineraries'][0]['segments'][-1]['arrival']['at'].replace('Z', '+00:00'))
+                
                 flight = {
-                    'airline': offer['validatingAirlineCodes'][0],
-                    'departure': offer['itineraries'][0]['segments'][0]['departure']['at'],
-                    'arrival': offer['itineraries'][0]['segments'][-1]['arrival']['at'],
-                    'price': f"{offer['price']['total']} {offer['price']['currency']}",
+                    'airline': airline_name,
+                    'departure': departure_time.strftime('%m/%d/%y %I:%M %p'),
+                    'arrival': arrival_time.strftime('%m/%d/%y %I:%M %p'),
+                    'price': f"${float(offer['price']['total']):.2f}",
                     'seats_remaining': offer['numberOfBookableSeats']
                 }
                 flights.append(flight)
             return flights
+        
         return None
     
     except ResponseError as e:
@@ -100,4 +141,13 @@ def check_flights(destination: str, departure_date: str, origin: str = "LON") ->
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return None
+
+def get_todays_date() -> str:
+    """
+    Get today's date in mm/dd/yy format.
+    
+    Returns:
+        str: Today's date formatted as mm/dd/yy
+    """
+    return datetime.now().strftime('%m/%d/%y')
 
