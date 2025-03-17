@@ -155,17 +155,16 @@ def get_todays_date() -> str:
     """
     return datetime.now().strftime('%m/%d/%y')
 
-def web_search(query: str, num_results: int = 5) -> Optional[List[Dict[str, str]]]:
+def web_search(query: str, num_results: int = 5) -> Optional[List[str]]:
     """
-    Perform a web search and scrape content from the top results.
+    Perform a web search and return content from the top results in a text-only format.
     
     Args:
         query (str): Search query
         num_results (int): Number of results to return (default: 5)
 
     Returns:
-        Optional[List[Dict[str, str]]]: List of search results with their content,
-                                      or None if the search fails
+        Optional[List[str]]: List of formatted text results, or None if the search fails
     """
     try:
         user_agents = [
@@ -204,17 +203,18 @@ def web_search(query: str, num_results: int = 5) -> Optional[List[Dict[str, str]
                     script.decompose()
                 
                 text = ' '.join(soup.stripped_strings)
-                text = text[:2000] + '...' if len(text) > 1000 else text
+                text = text[:2000] + '...' if len(text) > 2000 else text
                 
-                results.append({
-                    'title': result['title'],
-                    'link': result['href'],
-                    'snippet': result['body'],
-                    'content': text
-                })
+                formatted_result = f"""
+                Source: {result['title']}
+                Summary: {result['body']}
+                Content: {text}
+                ----------------------------------------
+                """
+                results.append(formatted_result)
                 
             except Exception as e:
-                print(f"Error scraping {result['href']}: {str(e)}")
+                print(f"Error scraping content: {str(e)}")
                 continue
         
         return results if results else None

@@ -92,7 +92,7 @@ def get_llm_response(question, context):
             Returns a list of web search results for a given query.
 
             Input: query (str)
-            Return format: Optional[List[Dict[str, str]]]: List of web search results, or None if no results are found
+            Return format: Optional[List[str]]: List of formatted text results, or None if the search fails
 
             ========================
 
@@ -104,9 +104,9 @@ def get_llm_response(question, context):
             If you already have the information you need from the tool ouputs, ignore the rest of the instructions and answer the question immediately in the following format:
 
             
-            {"response": "Answer to the question in natural language using the information you have. Be detailed and thorough."}
+            {"response": "Answer to the question in natural language using the information you have. Be detailed and thorough. If there is a lot of information, try to summarize. Outside of the JSON format, do not use any brackets or quotation marks."}
             
-            
+            Here is an example response: {"response": "The weather in London is sunny with a temperature of 60 degrees Fahrenheit and a wind speed of 10 mph."}
             Recall, you response is for this question: """ + question + """
             
             """
@@ -115,7 +115,7 @@ def get_llm_response(question, context):
         }
     ],
 
-    "max_tokens": 500
+    "max_tokens": 1000
     }
 
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
@@ -191,6 +191,7 @@ while True:
 
     print("\n\nHere is the LLM response:")
     response = get_llm_response(question, context)
+    print(response)
     print(response["response"])
 
     context = ""
