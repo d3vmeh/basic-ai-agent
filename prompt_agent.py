@@ -71,6 +71,23 @@ def get_llm_response(question, context):
             Example response: {"tools": {"get_current_weather": {"location": "London"}, "get_youtube_transcript": {"video_url": "https://www.youtube.com/watch?v=yBGlX1CEG14"}}}
             
             
+
+            Tool 3: check_flights
+
+            Returns a list of available flights for a given destination and date.
+
+            Inputs:
+            - destination (str): IATA code of destination airport (e.g., 'NYC' for New York)
+            - departure_date (str): Date in format mm/dd/yy
+            - origin (str): IATA code of origin airport (default: 'LON' for London)
+
+            Returns:
+            - Optional[List[Dict]]: List of available flights with their details, or None if no flights are found
+
+            
+            Return format: Optional[List[Dict]]: List of available flights with their details, or None if no flights are found
+
+
             ========================
 
             
@@ -133,6 +150,13 @@ while True:
             value = get_current_weather(tool_input)
             tool_outputs.append(value)
             tools_used.append(tool)
+        elif tool == 'check_flights':
+            destination = response['tools']['check_flights']['destination']
+            departure_date = response['tools']['check_flights']['departure_date']
+            origin = response['tools']['check_flights']['origin']
+            value = check_flights(destination, departure_date, origin)
+            tool_outputs.append(value)
+            tools_used.append(tool)
         else:
             print("Tool not found")
 
@@ -153,5 +177,7 @@ while True:
     print("\n\nHere is the LLM response:")
     response = get_llm_response(question, context)
     print(response["response"])
+
+    context = ""
 
 
