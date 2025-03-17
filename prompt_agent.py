@@ -87,7 +87,12 @@ def get_llm_response(question, context):
             
             Return format: Optional[List[Dict]]: List of available flights with their details, or None if no flights are found
 
+            Tool 4: web_search
 
+            Returns a list of web search results for a given query.
+
+            Input: query (str)
+            Return format: Optional[List[Dict[str, str]]]: List of web search results, or None if no results are found
 
             ========================
 
@@ -160,6 +165,11 @@ while True:
             tools_used.append(tool)
         elif tool == 'get_todays_date':
             value = get_todays_date()
+            tool_outputs.append(value)
+            tools_used.append(tool)
+        elif tool == 'web_search':
+            query = response['tools']['web_search']['query']
+            value = web_search(query)
             tool_outputs.append(value)
             tools_used.append(tool)
         else:

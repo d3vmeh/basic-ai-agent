@@ -4,6 +4,10 @@ import requests
 import os
 from datetime import datetime
 from amadeus import Client, ResponseError
+from duckduckgo_search import DDGS
+from bs4 import BeautifulSoup
+import random
+import time
 
 weather_key = os.getenv("weather_key")
 
@@ -151,3 +155,70 @@ def get_todays_date() -> str:
     """
     return datetime.now().strftime('%m/%d/%y')
 
+def web_search(query: str, num_results: int = 5) -> Optional[List[Dict[str, str]]]:
+    """
+    Perform a web search and scrape content from the top results.
+    
+    Args:
+        query (str): Search query
+        num_results (int): Number of results to return (default: 5)
+
+    Returns:
+        Optional[List[Dict[str, str]]]: List of search results with their content,
+                                      or None if the search fails
+    """
+    try:
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
+        ]
+
+        ddgs = DDGS()
+        search_results = list(ddgs.text(query, max_results=num_results))
+        
+        results = []
+        for result in search_results:
+            time.sleep(random.uniform(1, 3))
+            
+            try:
+                headers = {
+                    'User-Agent': random.choice(user_agents),
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                }
+                
+                response = requests.get(
+                    result['href'],
+                    headers=headers,
+                    timeout=10
+                )
+                response.raise_for_status()
+                
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                for script in soup(['script', 'style', 'meta', 'link']):
+                    script.decompose()
+                
+                text = ' '.join(soup.stripped_strings)
+                text = text[:2000] + '...' if len(text) > 1000 else text
+                
+                results.append({
+                    'title': result['title'],
+                    'link': result['href'],
+                    'snippet': result['body'],
+                    'content': text
+                })
+                
+            except Exception as e:
+                print(f"Error scraping {result['href']}: {str(e)}")
+                continue
+        
+        return results if results else None
+    
+    except Exception as e:
+        print(f"Error performing web search: {str(e)}")
+        return None
